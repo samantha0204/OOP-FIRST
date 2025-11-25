@@ -3,6 +3,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.BufferedWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -92,9 +94,13 @@ public class Main {
     public static void postLoginMenu(Scanner sc, User user) {
         while (true) {
             clearScreen();
+            System.out.println("Hello, " + user.getUsername() + "!");
+            System.out.println("You currently have " + user.getStars() + " points.");
+            System.out.println();
+            
             System.out.println("\n--- Starbucks Main Menu ---");
             System.out.println("1. Order");
-            System.out.println("2. View Points");
+            System.out.println("2. Redeem Points");
             System.out.println("3. Deposit Wallet");
             System.out.println("4. Transaction History");
             System.out.println("5. Profile");
@@ -568,72 +574,224 @@ public class Main {
             fw.write("TRANSACTION: " + LocalDateTime.now().format(dtf) + System.lineSeparator());
             for (CartItem c : cart) {
                 fw.write(String.format("%s %s %s x%d — ₱%.2f%s",
-                    c.category.equals("Drink") ? "[Drink]" : "[Item]",
+                    c.category.equals("Drink") ? "Drink" : "Item",
                     c.name,
-                    (c.size == null ? "" : "(" + c.size + ")"),
+                    (c.size != null ? "(" + c.size + ")" : ""),
                     c.qty,
                     c.subTotal(),
                     System.lineSeparator()));
             }
             fw.write(String.format("Total: ₱%.2f%s", total, System.lineSeparator()));
-            fw.write(String.format("Balance after: ₱%.2f%s", user.getBalance(), System.lineSeparator()));
-            fw.write("--" + System.lineSeparator()); // keep separator marker for history reading
+            fw.write(System.lineSeparator());
         } catch (Exception e) {
-            System.out.println("Error writing transaction: " + e.getMessage());
+            System.out.println("Failed to write transaction: " + e.getMessage());
         }
     }
 
-    // The clearScreen method using ANSI escape codes
-    public static void clearScreen() {
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
-    }
-
-    // Optional pause method to wait for Enter key before continuing
     public static void pause(Scanner sc) {
         System.out.println("\nPress Enter to continue...");
         sc.nextLine();
     }
 
-    static class Item {
+    public static void clearScreen() {
+        // Cross-platform way to simulate clearing screen
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+    }
+
+    // --- Supporting Classes ---
+
+    public static class Drink {
+        String name;
+        double priceTall, priceGrande, priceVenti;
+
+        public Drink(String name, double priceTall, double priceGrande, double priceVenti) {
+            this.name = name;
+            this.priceTall = priceTall;
+            this.priceGrande = priceGrande;
+            this.priceVenti = priceVenti;
+        }
+    }
+
+    public static class Item {
         String name;
         double price;
         int stock;
-        Item(String name, double price, int stock) {
+
+        public Item(String name, double price, int stock) {
             this.name = name;
             this.price = price;
             this.stock = stock;
         }
     }
 
-    static class Drink {
+    public static class CartItem {
+        String category;
         String name;
-        double priceTall;
-        double priceGrande;
-        double priceVenti;
-        Drink(String name, double t, double g, double v) {
-            this.name = name;
-            this.priceTall = t;
-            this.priceGrande = g;
-            this.priceVenti = v;
-        }
-    }
-
-    static class CartItem {
-        String category; 
-        String name;
-        String size; 
-        double unitPrice;
+        String size; // nullable
+        double price;
         int qty;
-        CartItem(String category, String name, String size, double unitPrice, int qty) {
+
+        public CartItem(String category, String name, String size, double price, int qty) {
             this.category = category;
             this.name = name;
             this.size = size;
-            this.unitPrice = unitPrice;
+            this.price = price;
             this.qty = qty;
         }
-        double subTotal() {
-            return unitPrice * qty;
+
+        public double subTotal() {
+            return price * qty;
+        }
+    }
+
+    public static class User {
+        private String username;
+        private String password;
+        private String name;
+        private int age;
+        private String birthday;
+        private String email;
+        private String address;
+        private int stars;
+        private double balance;
+
+        public String getUsername() { return username; }
+        public String getName() { return name; }
+        public int getAge() { return age; }
+        public String getBirthDay() { return birthday; }
+        public String getEmailAddress() { return email; }
+        public String getAddress() { return address; }
+        public int getStars() { return stars; }
+        public double getBalance() { return balance; }
+
+        public void setStars(int stars) { this.stars = stars; }
+        public void setBalance(double balance) { this.balance = balance; }
+
+        public void registerUser(Scanner sc) {
+            System.out.print("Enter username: ");
+            username = sc.nextLine().trim();
+
+            File userFile = new File("users/" + username + ".txt");
+            if (userFile.exists()) {
+                System.out.println("Username already exists. Try logging in.");
+                return;
+            }
+
+            System.out.print("Enter password: ");
+            password = sc.nextLine();
+
+            System.out.print("Enter full name: ");
+            name = sc.nextLine();
+
+            System.out.print("Enter age: ");
+            while (!sc.hasNextInt()) {
+                System.out.println("Invalid input. Please enter a number.");
+                sc.nextLine();
+            }
+            age = sc.nextInt();
+            sc.nextLine();
+
+            System.out.print("Enter birthday (e.g., YYYY-MM-DD): ");
+            birthday = sc.nextLine();
+
+            System.out.print("Enter email address: ");
+            email = sc.nextLine();
+
+            System.out.print("Enter address: ");
+            address = sc.nextLine();
+
+            stars = 0;
+            balance = 0.0;
+
+            saveUserToFile();
+
+            System.out.println("Registration successful! You can now login.");
+        }
+
+        public void saveUserToFile() {
+            try {
+                File folder = new File("users");
+                if (!folder.exists()) folder.mkdir();
+
+                File userFile = new File("users/" + username + ".txt");
+                try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userFile)))) {
+                    pw.println("Username: " + username);
+                    pw.println("Password: " + password);
+                    pw.println("Name: " + name);
+                    pw.println("Age: " + age);
+                    pw.println("Birthday: " + birthday);
+                    pw.println("Email: " + email);
+                    pw.println("Address: " + address);
+                    pw.println("Stars: " + stars);
+                    pw.printf("Balance: %.2f\n", balance);
+                    pw.println("--");  // Separator for transactions
+                }
+            } catch (Exception e) {
+                System.out.println("Error saving user file: " + e.getMessage());
+            }
+        }
+
+        private boolean loadUserFromFile() {
+            File userFile = new File("users/" + username + ".txt");
+            if (!userFile.exists()) return false;
+
+            try (Scanner fileScanner = new Scanner(userFile)) {
+                while (fileScanner.hasNextLine()) {
+                    String line = fileScanner.nextLine();
+
+                    if (line.startsWith("Password: ")) {
+                        password = line.substring("Password: ".length());
+                    } else if (line.startsWith("Name: ")) {
+                        name = line.substring("Name: ".length());
+                    } else if (line.startsWith("Age: ")) {
+                        age = Integer.parseInt(line.substring("Age: ".length()));
+                    } else if (line.startsWith("Birthday: ")) {
+                        birthday = line.substring("Birthday: ".length());
+                    } else if (line.startsWith("Email: ")) {
+                        email = line.substring("Email: ".length());
+                    } else if (line.startsWith("Address: ")) {
+                        address = line.substring("Address: ".length());
+                    } else if (line.startsWith("Stars: ")) {
+                        stars = Integer.parseInt(line.substring("Stars: ".length()));
+                    } else if (line.startsWith("Balance: ")) {
+                        balance = Double.parseDouble(line.substring("Balance: ".length()));
+                    }
+                }
+                return true;
+            } catch (Exception e) {
+                System.out.println("Error reading user file: " + e.getMessage());
+                return false;
+            }
+        }
+
+        public boolean logInUser(Scanner sc) {
+            System.out.print("Enter username: ");
+            username = sc.nextLine().trim();
+
+            File userFile = new File("users/" + username + ".txt");
+            if (!userFile.exists()) {
+                System.out.println("User not found.");
+                return false;
+            }
+
+            System.out.print("Enter password: ");
+            String inputPassword = sc.nextLine();
+
+            if (!loadUserFromFile()) {
+                System.out.println("Error loading user data.");
+                return false;
+            }
+
+            if (!inputPassword.equals(password)) {
+                System.out.println("Incorrect password.");
+                return false;
+            }
+
+            System.out.println("Login successful! Welcome back, " + username + "!");
+            System.out.println("You have " + stars + " stars.");
+
+            return true;
         }
     }
 }
