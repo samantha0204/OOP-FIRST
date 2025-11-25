@@ -134,8 +134,11 @@ public class Main {
                     pause(sc);
                     break;
                 case 5:
-                    viewProfile(user);
-                    pause(sc);
+                    boolean deleted = ProfileMenu.show(sc, user);
+                        if (deleted) {
+                           user = null;  // log out user
+                           return;       // return to main register/login/exit menu
+                           }
                     break;
                 case 6:
                     System.out.println("Logging out...");
