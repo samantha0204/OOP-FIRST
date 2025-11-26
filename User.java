@@ -1,6 +1,9 @@
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Scanner;
 
 public class User extends Person {
@@ -13,7 +16,7 @@ public class User extends Person {
    }
 
    public User(String var1, int var2, String var3, String var4, String var5,
-               String var6, String var7, int var8, double var9) {
+         String var6, String var7, int var8, double var9) {
       super(var1, var2, var3, var4, var5);
       this.username = var6;
       this.password = var7;
@@ -21,18 +24,40 @@ public class User extends Person {
       this.balance = var9;
    }
 
-   public String getUsername() { return this.username; }
-   public String getPassword() { return this.password; }
-   public int getStars() { return this.stars; }
-   public double getBalance() { return this.balance; }
+   public String getUsername() {
+      return this.username;
+   }
 
-   public void setUsername(String var1) { this.username = var1; }
-   public void setPassword(String var1) { this.password = var1; }
-   public void setStars(int var1) { this.stars = var1; }
-   public void setBalance(double var1) { this.balance = var1; }
+   public String getPassword() {
+      return this.password;
+   }
+
+   public int getStars() {
+      return this.stars;
+   }
+
+   public double getBalance() {
+      return this.balance;
+   }
+
+   public void setUsername(String var1) {
+      this.username = var1;
+   }
+
+   public void setPassword(String var1) {
+      this.password = var1;
+   }
+
+   public void setStars(int var1) {
+      this.stars = var1;
+   }
+
+   public void setBalance(double var1) {
+      this.balance = var1;
+   }
 
    // ===============================
-   //   REGISTER USER
+   // REGISTER USER
    // ===============================
    public void registerUser(Scanner var1) {
       String var2;
@@ -42,28 +67,39 @@ public class User extends Person {
          var2 = var1.nextLine();
          var3 = ErrorHandler.isValidName(var2);
          if (!var3) {
-            System.out.println("Invalid! Your name should contain letters, not be empty, not purely spaces, and be under 30 characters.");
+            System.out.println(
+                  "Invalid! Your name should contain letters, not be empty, not purely spaces, and be under 30 characters.");
          }
       } while (!var3);
 
-      int var4;
+      int var4 = 0;
+      boolean validAge = false;
+
       do {
          System.out.print("Enter age: ");
+         String input = var1.nextLine().trim();
 
-         while (!var1.hasNextInt()) {
-            System.out.println("Invalid! Your age must be a whole number between 17 and 120.");
-            var1.nextLine();
-            System.out.print("Enter age: ");
+         // empty input
+         if (input.isEmpty()) {
+            System.out.println("Invalid! Age cannot be empty.");
+            continue;
          }
 
-         var4 = var1.nextInt();
-         var1.nextLine();
-         var3 = ErrorHandler.isValidAge(var4);
+         // integer check
+         try {
+            var4 = Integer.parseInt(input);
+         } catch (NumberFormatException e) {
+            System.out.println("Invalid! Your age must be a whole number between 17 and 120.");
+            continue;
+         }
 
-         if (!var3) {
+         // range check
+         validAge = ErrorHandler.isValidAge(var4);
+         if (!validAge) {
             System.out.println("Invalid! Your age must be between 17 and 120.");
          }
-      } while (!var3);
+
+      } while (!validAge);
 
       String var5;
       do {
@@ -71,7 +107,7 @@ public class User extends Person {
          var5 = var1.nextLine();
          var3 = ErrorHandler.isValidBirthday(var5);
          if (!var3) {
-            System.out.println("Invalid birthday format.");
+            System.out.println("Invalid! Birthday must be in this format (MM-DD-YYYY)");
          }
       } while (!var3);
 
@@ -81,7 +117,7 @@ public class User extends Person {
          var6 = var1.nextLine();
          var3 = ErrorHandler.isValidEmail(var6);
          if (!var3) {
-            System.out.println("Invalid email format.");
+            System.out.println("Invalid email format. Please use a valid email format (e.g.,@gmail.com/@yahoo.com).");
          }
       } while (!var3);
 
@@ -103,7 +139,8 @@ public class User extends Person {
          boolean exists = doesUserFileExist(var8);
 
          if (!validU) {
-            System.out.println("Invalid! Username must be 5–20 chars. Letters, underscores, hyphens, and periods only.");
+            System.out
+                  .println("Invalid! Username must be 5–20 chars. Letters, underscores, hyphens, and periods only.");
          } else if (exists) {
             System.out.println("This username is already taken. Please choose another.");
             validU = false;
@@ -116,7 +153,8 @@ public class User extends Person {
          var11 = var1.nextLine();
          var3 = ErrorHandler.isValidPassword(var11);
          if (!var3) {
-            System.out.println("Invalid! Your password must be 8-20 chars, include uppercase, lowercase, number, and special character.");
+            System.out.println(
+                  "Invalid! Your password must be 8-20 chars, include uppercase, lowercase, number, and special character.");
          }
       } while (!var3);
 
@@ -172,12 +210,13 @@ public class User extends Person {
    }
 
    // ===============================
-   //   LOAD USER FROM FILE
+   // LOAD USER FROM FILE
    // ===============================
    public boolean loadUserFromFile(String username) {
       File userFile = new File("users/" + username + ".txt");
 
-      if (!userFile.exists()) return false;
+      if (!userFile.exists())
+         return false;
 
       try (Scanner fileScanner = new Scanner(userFile)) {
 
@@ -226,17 +265,36 @@ public class User extends Person {
       System.out.print("Enter username: ");
       String username = sc.nextLine();
 
+      System.out.print("Enter password: ");
+      String password = sc.nextLine();
+
       File userFile = new File("users/" + username + ".txt");
       if (!userFile.exists()) {
          System.out.println("User not found.");
          return false;
       }
 
-      System.out.print("Enter password: ");
-      String password = sc.nextLine();
+      String savedUsername = null;
+      try (Scanner fs = new Scanner(userFile)) {
+         while (fs.hasNextLine()) {
+            String line = fs.nextLine();
+            if (line.startsWith("Username: ")) {
+               savedUsername = line.substring("Username: ".length());
+               break;
+            }
+         }
+      } catch (Exception e) {
+         System.out.println("Error reading user file.");
+         return false;
+      }
+
+      // **Case-sensitive username check**
+      if (!savedUsername.equals(username)) {
+         System.out.println("Incorrect username. ");
+         return false;
+      }
 
       try (Scanner fileScanner = new Scanner(userFile)) {
-
          while (fileScanner.hasNextLine()) {
             String line = fileScanner.nextLine();
 
@@ -245,10 +303,7 @@ public class User extends Person {
 
                if (savedPassword.equals(password)) {
                   System.out.println("Login successful! Welcome back, " + username + "!");
-
-                  // LOAD FULL USER DETAILS HERE
                   loadUserFromFile(username);
-
                   return true;
                } else {
                   System.out.println("Incorrect password.");
@@ -257,12 +312,171 @@ public class User extends Person {
             }
          }
 
-         System.out.println("Password not found in user file.");
+         System.out.println("Password not found.");
          return false;
 
       } catch (Exception e) {
-         System.out.println("Error reading user file: " + e.getMessage());
+         System.out.println("Error reading user file.");
          return false;
       }
    }
+
+   public static void viewProfile(User user) {
+      Admin.clearScreen();
+      System.out.println("\n--- Profile ---");
+      System.out.println("Name: " + user.getName());
+      System.out.println("Age: " + user.getAge());
+      System.out.println("Birthday: " + user.getBirthDay());
+      System.out.println("Email: " + user.getEmailAddress());
+      System.out.println("Address: " + user.getAddress());
+      System.out.println("Username: " + user.getUsername());
+      System.out.println("Stars: " + user.getStars());
+      System.out.printf("Balance: ₱%,.2f\n", user.getBalance());
+   }
+
+   public boolean redeemPoints() {
+      if (this.stars < 100) {
+         System.out.println("You need at least 100 stars to redeem ₱50.");
+         return false;
+      }
+
+      int redeemTimes = this.stars / 100; // how many 100s?
+      int pesos = redeemTimes * 50;
+
+      // Deduct points
+      this.stars -= redeemTimes * 100;
+
+      // Add money to wallet
+      this.balance += pesos;
+
+      // Save changes
+      this.saveUserToFile();
+
+      System.out.println("Redeemed " + (redeemTimes * 100) + " stars for ₱" + pesos);
+      System.out.println("New Balance: ₱" + this.balance);
+      System.out.println("Remaining Stars: " + this.stars);
+
+      return true;
+   }
+
+   public static void appendTransactionToFile(User user, List<Order.CartItem> cart, double total) {
+      File userFile = new File("users/" + user.getUsername() + ".txt");
+      try (FileWriter fw = new FileWriter(userFile, true)) {
+         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+         fw.write("TRANSACTION: " + LocalDateTime.now().format(dtf) + System.lineSeparator());
+         for (Order.CartItem c : cart) {
+            fw.write(String.format("%s %s %s x%d — ₱%.2f%s",
+                  c.category.equals("Drink") ? "Drink" : "Item",
+                  c.name,
+                  (c.size != null ? "(" + c.size + ")" : ""),
+                  c.qty,
+                  c.subTotal(),
+                  System.lineSeparator()));
+         }
+         fw.write(String.format("Total: ₱%.2f%s", total, System.lineSeparator()));
+         fw.write(System.lineSeparator());
+      } catch (Exception e) {
+         System.out.println("Failed to write transaction: " + e.getMessage());
+      }
+   }
+
+   // delete transaction file
+
+   public void deleteTransactionHistory() {
+      File userFile = new File("users/" + this.username + ".txt");
+      if (!userFile.exists()) {
+         System.out.println("User file not found.");
+         return;
+      }
+
+      try {
+         StringBuilder profileData = new StringBuilder();
+         boolean delimiterFound = false;
+
+         Scanner sc = new Scanner(userFile);
+
+         // Read only until "--"
+         while (sc.hasNextLine()) {
+            String line = sc.nextLine();
+            profileData.append(line).append("\n");
+
+            if (line.trim().equals("--")) {
+               delimiterFound = true;
+               break;
+            }
+         }
+         sc.close();
+
+         if (!delimiterFound) {
+            System.out.println("No transaction history found to delete.");
+            return;
+         }
+
+         // Rewrite file with profile ONLY
+         FileWriter fw = new FileWriter(userFile, false);
+         fw.write(profileData.toString());
+         fw.close();
+
+         System.out.println("Transaction history successfully deleted!");
+
+      } catch (Exception e) {
+         System.out.println("Error deleting transaction history: " + e.getMessage());
+      }
+   }
+
+   // user?
+   public static void viewTransactionHistory(User user) {
+      Admin.clearScreen();
+      File file = new File("users/" + user.getUsername() + ".txt");
+
+      boolean foundHistory = false;
+      boolean afterDelimiter = false;
+
+      try (Scanner fs = new Scanner(file)) {
+         System.out.println("--- Transaction History ---\n");
+
+         while (fs.hasNextLine()) {
+            String line = fs.nextLine();
+
+            if (line.trim().equals("--")) {
+               afterDelimiter = true;
+               continue;
+            }
+
+            if (afterDelimiter) {
+               System.out.println(line);
+               foundHistory = true;
+            }
+         }
+      } catch (Exception e) {
+         System.out.println("Error reading transaction history.");
+         return;
+      }
+
+      if (!foundHistory) {
+         System.out.println("No transaction history.");
+         return;
+      }
+
+      System.out.println("\n1. Delete Transaction History");
+      System.out.println("2. Back");
+
+      while (true) {
+
+         System.out.print("Enter choice: ");
+
+         String choice = Main.globalScanner.nextLine().trim();
+
+         if (choice.equals("1")) {
+            user.deleteTransactionHistory();
+            break; // valid → exit loop
+         } else if (choice.equals("2")) {
+            break; // go back
+         } else {
+            System.out.println("Invalid input. Please enter 1 or 2 only.");
+            continue;
+         }
+      }
+   }
+
 }

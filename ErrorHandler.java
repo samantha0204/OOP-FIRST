@@ -1,4 +1,4 @@
-public class ErrorHandler {
+final class ErrorHandler {
 
     // NAME
     public static boolean isValidName(String name) {

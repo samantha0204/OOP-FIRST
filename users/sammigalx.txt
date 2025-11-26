@@ -1,0 +1,10 @@
+Name: Samantha Angela Galan
+Age: 19
+Birthday: 04-02-2006
+Email: samantha@gmail.com
+Address: san francisco
+Username: sammigalx
+Password: Sammigalx@00
+Stars: 0
+Balance: 0.0
+--

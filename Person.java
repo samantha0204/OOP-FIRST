@@ -1,4 +1,6 @@
-public class Person {
+
+
+abstract public class Person {
 
     // Attributes
     private String name;

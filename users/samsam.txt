@@ -1,0 +1,15 @@
+Username: SAMSAM
+Password: Samgalan@09
+Name: Samantha galan
+Age: 19
+Birthday: 2006-04-04
+Email: sam@gmail.com
+Address: san francisco
+Stars: 10
+Balance: 9999999999460.00
+--
+TRANSACTION: 2025-11-25 19:38:46
+Item Chocolate Croissant  x2 — ₱220.00
+Drink Caffè Latte (Grande) x2 — ₱320.00
+Total: ₱540.00
+

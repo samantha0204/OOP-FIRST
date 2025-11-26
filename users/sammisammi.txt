@@ -1,0 +1,10 @@
+Name: samnantha galan
+Age: 19
+Birthday: 04-09-2009
+Email: samantha@gmail.com
+Address: san franxcisic
+Username: sammisammi
+Password: Sammi@00
+Stars: 66
+Balance: 5600.0
+--
